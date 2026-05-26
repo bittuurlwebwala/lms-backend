@@ -7,6 +7,7 @@ const {
     createUser,
     loginUser,
     getUserProfile,
+    updateUserProfile,
     getDashboard,
     getAllUsers,
     userLogout,
@@ -20,6 +21,7 @@ const { protect, adminOnly } = require("../middleware/authMiddleware");
 router.post("/register", createUser);
 router.post("/login", upload.none(), loginUser);
 router.get("/profile", protect, getUserProfile);
+router.put("/profile", protect, updateUserProfile);
 router.get("/dashboard", protect, getDashboard); // New dashboard route
 router.get("/enrolled-courses", protect, getEnrolledCourses); // Student only
 router.get("/", protect, adminOnly, getAllUsers); // Only Admin can see all users

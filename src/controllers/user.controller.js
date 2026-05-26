@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { uploadOnCloudinary } = require("../utils/cloudinary");
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, "../../uploads");
@@ -50,7 +51,14 @@ const createUser = async (req, res) => {
 
         try {
             const { id, name, email, password, role } = req.body || {};
-            const image = req.file ? `/uploads/${req.file.filename}` : (req.body.image || null);
+
+            let image = req.body.image || null;
+            if (req.file) {
+                const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+                if (cloudinaryResponse) {
+                    image = cloudinaryResponse.secure_url;
+                }
+            }
 
             // Try to find the user by ID (if provided) or by Email
             let existingUser = null;
@@ -119,7 +127,7 @@ const createUser = async (req, res) => {
                         email: user.email,
                         role: user.role,
                         image: user.image,
-                       // token: generateToken(user._id, user.role),
+                        // token: generateToken(user._id, user.role),
                     },
                 });
             } else {
@@ -211,6 +219,61 @@ const getUserProfile = async (req, res) => {
             message: error.message,
         });
     }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+const updateUserProfile = async (req, res) => {
+    upload(req, res, async function (err) {
+        if (err) {
+            return res.status(400).json({
+                success: false,
+                message: "Image upload failed",
+                error: err.message
+            });
+        }
+
+        try {
+            const user = await User.findById(req.user._id);
+            if (!user) {
+                return res.status(404).json({ success: false, message: "User not found" });
+            }
+
+            const { name } = req.body || {};
+
+            let image = req.body.image;
+            if (req.file) {
+                const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+                if (cloudinaryResponse) {
+                    image = cloudinaryResponse.secure_url;
+                }
+            }
+
+            if (name) user.name = name;
+            if (image) user.image = image;
+
+            const updatedUser = await user.save();
+
+            res.status(200).json({
+                success: true,
+                message: "Profile updated successfully",
+                data: {
+                    _id: updatedUser._id,
+                    name: updatedUser.name,
+                    email: updatedUser.email,
+                    role: updatedUser.role,
+                    image: updatedUser.image,
+                },
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: "Server error during profile update",
+                error: error.message,
+            });
+        }
+    });
 };
 
 // @desc    Get user dashboard
@@ -369,6 +432,7 @@ module.exports = {
     createUser,
     loginUser,
     getUserProfile,
+    updateUserProfile,
     getDashboard,
     getAllUsers,
     userLogout,

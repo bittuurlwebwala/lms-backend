@@ -4,12 +4,20 @@ const morgan = require("morgan");
 const userRoute = require("./routes/userRoute");
 const courseRoute = require("./routes/courseRoute");
 const lectureRoute = require("./routes/lectureRoute");
+const progressRoute = require("./routes/progressRoute");
+const quizRoute = require("./routes/quizRoute");
+const contactRoute = require("./routes/contactRoute");
+console.log("[DEBUG] Progress routes imported");
+console.log("[DEBUG] Quiz routes imported");
 const path = require("path");
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // Aapke Vite React App ka URL ho
+  credentials: true                // Jaruri hai kyonki axios withCredentials = true hai
+}));
 
 app.use(morgan("dev"));
 app.use(express.json());
@@ -22,6 +30,10 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/api/users", userRoute);
 app.use("/api/courses", courseRoute);
 app.use("/api/lectures", lectureRoute);
+app.use("/api/progress", progressRoute);
+app.use("/api/quizzes", quizRoute);
+app.use("/api/contact", contactRoute);
+console.log("[DEBUG] Progress and Quiz routes registered");
 
 app.get("/", (req, res) => {
   res.send("Backend Running");

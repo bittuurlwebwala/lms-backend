@@ -1,11 +1,13 @@
+const mongoose = require("mongoose");
 const Course = require("../models/course.model");
 const Lecture = require("../models/lecture.model");
+const User = require("../models/user.model");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
 // Ensure uploads directory exists
-const uploadDir = path.join(__dirname, "../../uploads");
+const uploadDir = path.join(__dirname, "../../uploads/images");
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -47,7 +49,7 @@ const createCourse = async (req, res) => {
             if (isPublished === 'true') isPublished = true;
             if (isPublished === 'false') isPublished = false;
 
-            const image = req.file ? `/uploads/${req.file.filename}` : (req.body.image || null);
+            const image = req.file ? `/uploads/images/${req.file.filename}` : (req.body.image || null);
 
             // Try to find existing course by ID for update
             let existingCourse = null;
@@ -67,6 +69,37 @@ const createCourse = async (req, res) => {
                         message: "Course not found for update"
                     });
                 }
+            }
+
+            // Handle if instructor is passed as an object or string 'null'
+            if (instructor && typeof instructor === 'object' && instructor._id) {
+                instructor = instructor._id;
+            }
+            if (instructor === 'null' || instructor === 'undefined') {
+                instructor = null;
+            }
+
+            console.log("Validating instructor ID:", instructor);
+
+            // Verify if instructor exists in User collection
+            if (instructor) {
+                // Validate if instructor is a valid ObjectId format
+                if (!mongoose.Types.ObjectId.isValid(instructor)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid Instructor ID format"
+                    });
+                }
+
+                const user = await User.findById(instructor);
+                if (!user) {
+                    console.log("Instructor NOT found in DB for ID:", instructor);
+                    return res.status(404).json({
+                        success: false,
+                        message: "Instructor (User) not found with the provided ID"
+                    });
+                }
+                console.log("Instructor found:", user.name);
             }
 
             // If course exists, update it
@@ -283,10 +316,10 @@ const enrollCourse = async (req, res) => {
         req.user.enrolledCourses.push(courseId);
         await req.user.save();
 
-        res.status(200).json({ 
-            success: true, 
-            message: "Successfully enrolled in the course", 
-            enrolledCourses: req.user.enrolledCourses 
+        res.status(200).json({
+            success: true,
+            message: "Successfully enrolled in the course",
+            enrolledCourses: req.user.enrolledCourses
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Server error during enrollment", error: error.message });
