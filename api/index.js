@@ -1,5 +1,6 @@
 const app = require("../src/app");
 const connectDB = require("../src/config/db");
+require("dotenv").config();
 
 let isConnected = false;
 
@@ -9,9 +10,13 @@ module.exports = async (req, res) => {
       await connectDB();
       isConnected = true;
     }
-  } catch (err) {
-    return res.status(500).json({ error: "DB connection failed" });
-  }
 
-  return app(req, res);
+    return app(req, res);
+  } catch (error) {
+   // console.log("Vercel Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error"
+    });
+  }
 };
