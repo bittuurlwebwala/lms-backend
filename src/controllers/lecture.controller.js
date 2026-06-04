@@ -4,11 +4,11 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Ensure uploads directory for videos exists
-const uploadDir = path.join(__dirname, "../../uploads/videos");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+const { uploadOnCloudinary } = require("../utils/cloudinary");
+const os = require("os");
+
+// Use OS temporary directory for Vercel compatibility
+const uploadDir = os.tmpdir();
 
 // Multer storage configuration for videos
 const storage = multer.diskStorage({
@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, file.originalname.replace(/\s+/g, '-'));
+        cb(null, `lecture-${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`);
     }
 });
 
@@ -66,7 +66,14 @@ const createLecture = async (req, res) => {
 
             // Get video URL (from uploaded file or body)
             const uploadedFile = req.files && req.files.length > 0 ? req.files[0] : null;
-            const videoUrl = uploadedFile ? `/uploads/videos/${uploadedFile.filename}` : req.body.videoUrl;
+            
+            let videoUrl = req.body.videoUrl || null;
+            if (uploadedFile) {
+                const cloudinaryResponse = await uploadOnCloudinary(uploadedFile.path);
+                if (cloudinaryResponse) {
+                    videoUrl = cloudinaryResponse.secure_url;
+                }
+            }
 
             if (!videoUrl) {
                 return res.status(400).json({
