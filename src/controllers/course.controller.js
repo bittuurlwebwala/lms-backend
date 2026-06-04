@@ -6,18 +6,17 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, "../../uploads/images");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+const os = require("os");
+const { uploadOnCloudinary } = require("../utils/cloudinary");
+// Use OS temporary directory for Vercel compatibility
+const uploadDir = os.tmpdir();
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + "-" + file.originalname);
+        cb(null, `course-${Date.now()}-${file.originalname}`);
     }
 });
 
@@ -49,7 +48,13 @@ const createCourse = async (req, res) => {
             if (isPublished === 'true') isPublished = true;
             if (isPublished === 'false') isPublished = false;
 
-            const image = req.file ? `/uploads/images/${req.file.filename}` : (req.body.image || null);
+            let image = req.body.image || null;
+            if (req.file) {
+                const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+                if (cloudinaryResponse) {
+                    image = cloudinaryResponse.secure_url;
+                }
+            }
 
             // Try to find existing course by ID for update
             let existingCourse = null;
