@@ -15,8 +15,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Aapke Vite React App ka URL ho
-  credentials: true                // Jaruri hai kyonki axios withCredentials = true hai
+  origin: process.env.FRONTEND_URL,   // Aapke Vite React App ka URL ho
+  credentials: true                     // Jaruri hai kyonki axios withCredentials = true hai
 }));
 
 app.use(morgan("dev"));
@@ -24,7 +24,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from uploads directory
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads",
+  express.static(path.join(__dirname, "../uploads"))
+);
 
 // Routes
 app.use("/api/users", userRoute);

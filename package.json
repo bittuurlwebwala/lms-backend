@@ -2,10 +2,10 @@
   "name": "my-backend",
   "version": "1.0.0",
   "description": "",
-  "main": "api/index.js",
+  "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node api/index.js",
+    "start": "node server.js",
     "build": "echo build complete"
   },
   "keywords": [],
