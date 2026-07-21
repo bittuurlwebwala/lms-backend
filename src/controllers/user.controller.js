@@ -5,6 +5,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { uploadOnCloudinary } = require("../utils/cloudinary");
+const sendEmail = require("../utils/sendEmail");
 
 const os = require("os");
 // Use OS temporary directory for Vercel compatibility
@@ -173,6 +174,128 @@ const loginUser = async (req, res) => {
 
             // Capitalize the first letter of the role for the message
             const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+
+            // 📧 Login notification email bhejo (async, response wait nahi karega)
+            const loginTime = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+            const roleColors = { admin: "#ef4444", teacher: "#f59e0b", student: "#10b981" };
+            const roleColor = roleColors[user.role] || "#667eea";
+            const roleIcons = { admin: "👑", teacher: "🧑‍🏫", student: "🎓" };
+            const roleIcon = roleIcons[user.role] || "👤";
+
+            sendEmail({
+                to: user.email,
+                subject: `🔐 New Login on LMS Platform`,
+                html: `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login Notification</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0f0f1a;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f1a;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- ═══ HEADER ═══ -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);border-radius:20px 20px 0 0;padding:40px 30px;text-align:center;">
+              <div style="display:inline-block;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:50%;width:70px;height:70px;line-height:70px;text-align:center;font-size:32px;margin-bottom:15px;">🎓</div>
+              <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:1px;">LMS Platform</h1>
+              <p style="margin:8px 0 0;color:#a0aec0;font-size:14px;letter-spacing:2px;text-transform:uppercase;">Login Activity Alert</p>
+            </td>
+          </tr>
+
+          <!-- ═══ HERO BANNER ═══ -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:25px 30px;text-align:center;">
+              <div style="font-size:40px;margin-bottom:10px;">🔐</div>
+              <h2 style="margin:0;color:#ffffff;font-size:22px;font-weight:600;">New Login Detected!</h2>
+              <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:15px;">We noticed a new sign-in to your account</p>
+            </td>
+          </tr>
+
+          <!-- ═══ MAIN BODY ═══ -->
+          <tr>
+            <td style="background:#1a1a2e;padding:35px 30px;">
+
+              <!-- Greeting -->
+              <p style="color:#e2e8f0;font-size:18px;margin:0 0 6px;">Hey <strong style="color:#ffffff;">${user.name}</strong>! 👋</p>
+              <p style="color:#a0aec0;font-size:14px;margin:0 0 30px;line-height:1.6;">Aapke LMS account mein ek successful login hua hai. Neeche details dekhen:</p>
+
+              <!-- Info Cards Grid -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:25px;">
+                <tr>
+                  <!-- Name Card -->
+                  <td width="48%" style="background:#16213e;border:1px solid #2d3748;border-radius:12px;padding:16px 18px;vertical-align:top;">
+                    <p style="margin:0 0 4px;color:#718096;font-size:11px;text-transform:uppercase;letter-spacing:1px;">👤 Full Name</p>
+                    <p style="margin:0;color:#ffffff;font-size:15px;font-weight:600;">${user.name}</p>
+                  </td>
+                  <td width="4%"></td>
+                  <!-- Role Card -->
+                  <td width="48%" style="background:#16213e;border:1px solid #2d3748;border-radius:12px;padding:16px 18px;vertical-align:top;">
+                    <p style="margin:0 0 4px;color:#718096;font-size:11px;text-transform:uppercase;letter-spacing:1px;">${roleIcon} Role</p>
+                    <p style="margin:0;font-size:15px;font-weight:600;">
+                      <span style="display:inline-block;background:${roleColor}22;color:${roleColor};border:1px solid ${roleColor}55;border-radius:20px;padding:2px 12px;font-size:13px;">${roleName}</span>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Email & Time Full Width -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:25px;">
+                <tr>
+                  <td style="background:#16213e;border:1px solid #2d3748;border-radius:12px;padding:16px 18px;margin-bottom:12px;">
+                    <p style="margin:0 0 4px;color:#718096;font-size:11px;text-transform:uppercase;letter-spacing:1px;">📧 Email Address</p>
+                    <p style="margin:0;color:#667eea;font-size:15px;font-weight:600;">${user.email}</p>
+                  </td>
+                </tr>
+              </table>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:30px;">
+                <tr>
+                  <td style="background:#16213e;border:1px solid #2d3748;border-radius:12px;padding:16px 18px;">
+                    <p style="margin:0 0 4px;color:#718096;font-size:11px;text-transform:uppercase;letter-spacing:1px;">🕐 Login Time</p>
+                    <p style="margin:0;color:#10b981;font-size:15px;font-weight:600;">${loginTime} <span style="color:#718096;font-size:12px;">(IST)</span></p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Security Alert Box -->
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="background:#2d1515;border:1px solid #ef444433;border-radius:12px;padding:18px 20px;">
+                    <p style="margin:0 0 6px;color:#ef4444;font-size:13px;font-weight:700;">⚠️ Security Notice</p>
+                    <p style="margin:0;color:#fc8181;font-size:13px;line-height:1.6;">Agar aapne yeh login nahi kiya hai, toh <strong>turant apna password change karein</strong> aur hamse contact karein.</p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- ═══ FOOTER ═══ -->
+          <tr>
+            <td style="background:#0f0f1a;border-radius:0 0 20px 20px;padding:25px 30px;text-align:center;border-top:1px solid #2d3748;">
+              <p style="margin:0 0 8px;color:#4a5568;font-size:12px;">You are receiving this because you are registered on LMS Platform.</p>
+              <p style="margin:0;color:#4a5568;font-size:12px;">© ${new Date().getFullYear()} LMS Platform. All rights reserved.</p>
+              <div style="margin-top:15px;">
+                <span style="display:inline-block;width:8px;height:8px;background:#667eea;border-radius:50%;margin:0 3px;"></span>
+                <span style="display:inline-block;width:8px;height:8px;background:#764ba2;border-radius:50%;margin:0 3px;"></span>
+                <span style="display:inline-block;width:8px;height:8px;background:#10b981;border-radius:50%;margin:0 3px;"></span>
+              </div>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+                `,
+            }).catch((err) => console.error("❌ Login email send karne mein error:", err.message));
 
             res.status(200).json({
                 success: true,

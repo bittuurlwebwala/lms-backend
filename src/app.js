@@ -7,8 +7,9 @@ const lectureRoute = require("./routes/lectureRoute");
 const progressRoute = require("./routes/progressRoute");
 const quizRoute = require("./routes/quizRoute");
 const contactRoute = require("./routes/contactRoute");
-console.log("[DEBUG] Progress routes imported");
-console.log("[DEBUG] Quiz routes imported");
+//console.log("[DEBUG] Progress routes imported");
+//console.log("[DEBUG] Quiz routes imported");
+
 const path = require("path");
 
 const app = express();
@@ -45,7 +46,7 @@ app.use("/api/lectures", lectureRoute);
 app.use("/api/progress", progressRoute);
 app.use("/api/quizzes", quizRoute);
 app.use("/api/contact", contactRoute);
-console.log("[DEBUG] Progress and Quiz routes registered");
+//console.log("[DEBUG] Progress and Quiz routes registered");
 
 app.get("/", (req, res) => {
   res.send("Backend Running");
