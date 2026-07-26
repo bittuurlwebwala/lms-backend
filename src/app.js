@@ -7,25 +7,31 @@ const lectureRoute = require("./routes/lectureRoute");
 const progressRoute = require("./routes/progressRoute");
 const quizRoute = require("./routes/quizRoute");
 const contactRoute = require("./routes/contactRoute");
-//console.log("[DEBUG] Progress routes imported");
-//console.log("[DEBUG] Quiz routes imported");
+const paymentRoute = require("./routes/paymentRoute");
+
 
 const path = require("path");
 
 const app = express();
 
 // Middleware
-const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.119:5173", "*"];
+const allowedOrigins = [process.env.FRONTEND_URL];
+
+// Regex to allow any localhost or 127.0.0.1 port in development
+const localhostRegex = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (mobile apps, Postman, curl)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
+
+    // Allow any localhost / 127.0.0.1 port
+    if (localhostRegex.test(origin)) return callback(null, true);
+
+    // Allow whitelisted production origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    return callback(new Error("Not allowed by CORS"), false);
   },
   credentials: true
 }));
@@ -46,7 +52,7 @@ app.use("/api/lectures", lectureRoute);
 app.use("/api/progress", progressRoute);
 app.use("/api/quizzes", quizRoute);
 app.use("/api/contact", contactRoute);
-//console.log("[DEBUG] Progress and Quiz routes registered");
+app.use("/api/payments", paymentRoute);
 
 app.get("/", (req, res) => {
   res.send("Backend Running");
