@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        default: null   
+        default: null
     },
     isBlocked: {
         type: Boolean,

@@ -115,6 +115,7 @@ const createUser = async (req, res) => {
                 role,
                 image
             });
+            console.log("user created", user);
 
             if (user) {
                 res.status(201).json({
