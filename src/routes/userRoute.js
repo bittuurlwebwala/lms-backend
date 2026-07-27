@@ -18,7 +18,7 @@ const {
 const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 // Routes
-router.post("/register", createUser);
+router.post("/register", upload.none(), createUser);
 router.post("/login", upload.none(), loginUser);
 router.get("/profile", protect, getUserProfile);
 router.put("/profile", protect, updateUserProfile);

@@ -55,11 +55,14 @@ app.use("/api/contact", contactRoute);
 app.use("/api/payments", paymentRoute);
 
 app.get("/", (req, res) => {
-  res.send("Backend Running");
+  res.send("API is running...");
+
 });
 
 app.get("/test", (req, res) => {
-  res.send("Test Route");
+  res.json({
+    message: "Welcome to the API"
+  });
 });
 
 module.exports = app;
