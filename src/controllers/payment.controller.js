@@ -86,8 +86,12 @@ const createSubscription = async (req, res) => {
 
 const verifySubscription = async (req, res) => {
   try {
-    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
-      req.body || {};
+    const {
+      razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+      courseId,
+    } = req.body || {};
 
     if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
       return res.status(400).json({
@@ -124,11 +128,22 @@ const verifySubscription = async (req, res) => {
       updatedAt: new Date(),
     };
 
+    if (courseId) {
+      const enrolledCourseIds =
+        user.enrolledCourses?.map((id) => id.toString()) || [];
+      if (!enrolledCourseIds.includes(courseId.toString())) {
+        user.enrolledCourses.push(courseId);
+      }
+    }
+
     await user.save();
 
     return res.status(200).json({
       success: true,
       message: "Payment verified successfully",
+      data: {
+        enrolledCourseId: courseId || null,
+      },
     });
   } catch (error) {
     return res.status(500).json({

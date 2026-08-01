@@ -1,25 +1,23 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const upload = multer(); // Initialize multer for handling form-data and files
 
 const {
-    createUser,
-    loginUser,
-    getUserProfile,
-    updateUserProfile,
-    getDashboard,
-    getAllUsers,
-    userLogout,
-    deleteUser,
-    toggleBlockUser,
-    getEnrolledCourses
+  createUser,
+  loginUser,
+  getUserProfile,
+  updateUserProfile,
+  getDashboard,
+  getAllUsers,
+  userLogout,
+  deleteUser,
+  toggleBlockUser,
+  getEnrolledCourses,
 } = require("../controllers/user.controller");
 const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 // Routes
-router.post("/register", upload.none(), createUser);
-router.post("/login", upload.none(), loginUser);
+router.post("/register", createUser);
+router.post("/login", loginUser);
 router.get("/profile", protect, getUserProfile);
 router.put("/profile", protect, updateUserProfile);
 router.get("/dashboard", protect, getDashboard); // New dashboard route
