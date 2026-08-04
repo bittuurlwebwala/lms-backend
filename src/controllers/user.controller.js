@@ -158,7 +158,12 @@ const createUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body || {};
+    const body = req.body || {};
+    const query = req.query || {};
+    const email = body.email || query.email;
+    const password = body.password || query.password;
+
+    console.log(`Login attempt for email: ${email}`);
 
     if (!email || !password) {
       return res.status(400).json({
@@ -177,6 +182,7 @@ const loginUser = async (req, res) => {
           message: "Your account has been blocked. Please contact admin.",
         });
       }
+      console.log(`User ${user.email} logged in successfully`);
 
       // Capitalize the first letter of the role for the message
       const roleName = user.role.charAt(0).toUpperCase() + user.role.slice(1);
