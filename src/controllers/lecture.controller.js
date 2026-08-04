@@ -149,21 +149,10 @@ const getCourseLectures = async (req, res) => {
 
     const lectures = await Lecture.find({ course: courseId });
 
-    let responseLectures = lectures;
-    if (!req.user && !isFreeCourse) {
-      responseLectures = lectures.filter(
-        (lecture) => lecture.isFreePreview === true,
-      );
-    } else if (!isPurchased && !isFreeCourse) {
-      responseLectures = lectures.filter(
-        (lecture) => lecture.isFreePreview === true,
-      );
-    }
-
     res.status(200).json({
       success: true,
-      count: responseLectures.length,
-      data: responseLectures,
+      count: lectures.length,
+      data: lectures,
       access: {
         isPurchased,
         isFreeCourse,

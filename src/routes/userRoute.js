@@ -1,5 +1,8 @@
 const express = require("express");
+const multer = require("multer");
 const router = express.Router();
+
+const multipartParser = multer().none();
 
 const {
   createUser,
@@ -17,7 +20,7 @@ const { protect, adminOnly } = require("../middleware/authMiddleware");
 
 // Routes
 router.post("/register", createUser);
-router.post("/login", loginUser);
+router.post("/login", multipartParser, loginUser);
 router.get("/profile", protect, getUserProfile);
 router.put("/profile", protect, updateUserProfile);
 router.get("/dashboard", protect, getDashboard); // New dashboard route

@@ -87,7 +87,7 @@ const createCourse = async (req, res) => {
 
       if (id) {
         existingCourse = await Course.findById(id);
-        console.log("existing course", existingCourse);
+        //console.log("existing course", existingCourse);
 
         if (!existingCourse) {
           return res.status(404).json({
@@ -105,8 +105,6 @@ const createCourse = async (req, res) => {
         instructor = null;
       }
 
-      console.log("Validating instructor ID:", instructor);
-
       // Verify if instructor exists in User collection
       if (instructor) {
         // Validate if instructor is a valid ObjectId format
@@ -119,13 +117,13 @@ const createCourse = async (req, res) => {
 
         const user = await User.findById(instructor);
         if (!user) {
-          console.log("Instructor NOT found in DB for ID:", instructor);
+          //console.log("Instructor NOT found in DB for ID:", instructor);
           return res.status(404).json({
             success: false,
             message: "Instructor (User) not found with the provided ID",
           });
         }
-        console.log("Instructor found:", user.name);
+        //console.log("Instructor found:", user.name);
       }
 
       // If course exists, update it
@@ -157,13 +155,16 @@ const createCourse = async (req, res) => {
         });
       }
 
+      const normalizedIsPublished =
+        isPublished === undefined ? true : isPublished;
+
       const course = await Course.create({
         title,
         description,
         price: isFree ? 0 : price || 0,
         category,
         isFree: isFree || false,
-        isPublished: isPublished || false,
+        isPublished: normalizedIsPublished,
         instructor,
         image,
       });
@@ -191,7 +192,7 @@ const createCourse = async (req, res) => {
 // @access  Public
 const getAllCourses = async (req, res) => {
   try {
-    const courses = await Course.find({ isPublished: true })
+    const courses = await Course.find({})
       .populate("instructor", "name email role")
       .lean();
 
@@ -209,27 +210,19 @@ const getAllCourses = async (req, res) => {
         const isFreeCourse =
           course.isFree === true || Number(course.price) === 0;
 
-        const coursePayload = {
+        return {
           ...course,
           totalLectures,
           isPurchased,
           purchaseRequired: !req.user && !isFreeCourse,
         };
-
-        if (!req.user && !isFreeCourse) {
-          return null;
-        }
-
-        return coursePayload;
       }),
     );
 
-    const filteredCourses = coursesWithLectures.filter(Boolean);
-
     res.status(200).json({
       success: true,
-      count: filteredCourses.length,
-      data: filteredCourses,
+      count: coursesWithLectures.length,
+      data: coursesWithLectures,
     });
   } catch (error) {
     res.status(500).json({
@@ -240,9 +233,6 @@ const getAllCourses = async (req, res) => {
   }
 };
 
-// @desc    Get single course
-// @route   GET /api/courses/:id
-// @access  Public
 const getCourseById = async (req, res) => {
   try {
     const id = req.query.id || req.params.id;
