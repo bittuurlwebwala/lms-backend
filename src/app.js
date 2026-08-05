@@ -19,6 +19,8 @@ const allowedOrigins = [process.env.FRONTEND_URL];
 // Regex to allow any localhost or 127.0.0.1 port in development
 const localhostRegex = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
+const vercelRegex = /^https:\/\/.*\.vercel\.app$/;
+
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -30,6 +32,9 @@ app.use(
 
       // Allow whitelisted production origins
       if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // Allow any Vercel domain (useful for preview deployments)
+      if (vercelRegex.test(origin)) return callback(null, true);
 
       return callback(new Error("Not allowed by CORS"), false);
     },
