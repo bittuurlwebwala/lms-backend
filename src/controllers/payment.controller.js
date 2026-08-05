@@ -50,24 +50,41 @@ const createSubscription = async (req, res) => {
 
     const razorpay = getRazorpayClient();
     if (!razorpay) {
+      console.error(
+        "Razorpay client creation failed. RAZORPAY_KEY_ID:",
+        process.env.RAZORPAY_KEY_ID ? "SET" : "MISSING",
+        "RAZORPAY_KEY_SECRET:",
+        process.env.RAZORPAY_KEY_SECRET ? "SET" : "MISSING",
+      );
       return res.status(500).json({
         success: false,
-        message: "Razorpay credentials are not configured",
+        message: "Razorpay credentials are not configured on the server",
       });
     }
-
     const amountInPaise = Number(req.body?.amount || DEFAULT_PAYMENT_AMOUNT);
-
+    // Razorpay requires minimum amount of 100 paise (₹1)
+    if (!amountInPaise || amountInPaise < 100) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid amount: ${amountInPaise} paise. Minimum is 100 paise (₹1).`,
+      });
+    }
+    console.log(
+      "Creating Razorpay order - Amount:",
+      amountInPaise,
+      "paise, User:",
+      user.email,
+    );
     const order = await razorpay.orders.create({
       amount: amountInPaise,
       currency: "INR",
-      receipt: `receipt_${user._id}_${Date.now()}`,
+      receipt: `rcpt_${user._id.toString().slice(-6)}_${Date.now()}`,
       notes: {
         userId: String(user._id),
         email: user.email,
       },
     });
-
+    console.log("Razorpay order created successfully - Order ID:", order.id);
     return res.status(200).json({
       success: true,
       order_id: order.id,
@@ -76,10 +93,17 @@ const createSubscription = async (req, res) => {
       message: "Order created successfully",
     });
   } catch (error) {
+    console.error(
+      "Razorpay order creation failed:",
+      error.message,
+      error.statusCode || "",
+      JSON.stringify(error.error || {}),
+    );
     return res.status(500).json({
       success: false,
       message: "Server error creating Razorpay order",
       error: error.message,
+      details: error.error?.description || error.description || null,
     });
   }
 };
