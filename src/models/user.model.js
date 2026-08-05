@@ -28,6 +28,21 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    subscription: {
+      status: {
+        type: String,
+        enum: ["active", "inactive"],
+        default: "inactive",
+      },
+      razorpaySubscriptionId: {
+        type: String,
+        default: null,
+      },
+      updatedAt: {
+        type: Date,
+        default: null,
+      },
+    },
     enrolledCourses: [
       {
         type: mongoose.Schema.Types.ObjectId,
